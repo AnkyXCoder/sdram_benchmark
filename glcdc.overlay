@@ -1,0 +1,40 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+/*
+ * GLCDC scan-out for the concurrent test: 1024x600 RGB565 at a 48 MHz pixel
+ * clock (about 57.5 frames/s), the same video mode as lcd_display_test.
+ * No panel, bridge or DSI host is enabled; only the GLCDC reads the frame
+ * buffers from SDRAM. The application owns the frame buffers
+ * (CONFIG_RENESAS_RA_GLCDC_FB_NUM=0).
+ */
+
+#include <zephyr/dt-bindings/display/panel.h>
+
+&zephyr_lcdif {
+	status = "okay";
+	height = <600>;
+	width = <1024>;
+	input-pixel-format = <PANEL_PIXEL_FORMAT_RGB_565>;
+	output-pixel-format = <PANEL_PIXEL_FORMAT_RGB_888>;
+	ext-ram = <&sdram1>;
+	output-clock-divisor = <5>;
+	output-pin-hsync = "TCON_PIN_NONE";
+	output-pin-vsync = "TCON_PIN_NONE";
+	output-pin-de = "TCON_PIN_NONE";
+	output-data-signal-polarity = "LOACTIVE";
+
+	display-timings {
+		compatible = "zephyr,panel-timing";
+		hsync-len = <100>;
+		hback-porch = <100>;
+		hfront-porch = <100>;
+		vsync-len = <10>;
+		vback-porch = <10>;
+		vfront-porch = <10>;
+		hsync-active = <1>;
+		vsync-active = <1>;
+		de-active = <0>;
+		pixelclk-active = <0>;
+		clock-frequency = <48000000>;
+	};
+};

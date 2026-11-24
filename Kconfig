@@ -1,0 +1,115 @@
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "SDRAM benchmark"
+
+menu "SDRAM benchmark options"
+
+config SDRAM_BENCH_BUF_SIZE
+	int "Benchmark buffer size in bytes"
+	default 4194304
+	range 1048576 4194304
+	help
+	  Bytes moved per throughput pass. It must be much larger than the
+	  16 KiB Cortex-M85 data cache so that read passes are served by the
+	  SDRAM, and must fit in one 4 MiB window of the SDRAM layout.
+
+config SDRAM_BENCH_ITERATIONS
+	int "Timed iterations per test"
+	default 8
+	range 1 64
+
+config SDRAM_BENCH_INTEGRITY
+	bool "Full-device integrity test before benchmarking"
+	default y
+	help
+	  Data-bus, address-bus, address-as-data, inverted-address and
+	  checkerboard tests over the complete SDRAM device. Throughput is
+	  not measured if any of them fails.
+
+config SDRAM_BENCH_INTEGRITY_PASSES
+	int "Integrity test passes"
+	default 1
+	range 1 100
+	depends on SDRAM_BENCH_INTEGRITY
+	help
+	  Each pass runs every integrity step; the random patterns use a new
+	  seed per pass.
+
+config SDRAM_BENCH_RETENTION_SEC
+	int "Data retention test idle time in seconds (0 disables)"
+	default 0
+	range 0 86400
+	help
+	  Fill all of SDRAM, leave the bus idle (auto-refresh only) for this
+	  time, then verify.
+
+config SDRAM_BENCH_CPU
+	bool "Sequential CPU read/write/copy suite"
+	default y
+
+config SDRAM_BENCH_ACCESS
+	bool "Access-pattern suite"
+	default y
+	help
+	  Mixed read/write, read-modify-write, random access, pointer-chase
+	  latency, stride sweep, access-size sweep and block-size sweep.
+
+config SDRAM_BENCH_DMA
+	bool "DMAC memory-to-memory suite"
+	select DMA
+	help
+	  SRAM-to-SDRAM, SDRAM-to-SRAM and SDRAM-to-SDRAM transfers on dma0
+	  channel 0, with transfer-unit and block-size sweeps.
+
+config SDRAM_BENCH_DMA_CHUNK
+	int "DMA block size in bytes for the base DMA tests"
+	default 131072
+	range 4096 131072
+	depends on SDRAM_BENCH_DMA
+	help
+	  Bytes moved per DMA block. The RA DMAC limits one block to 65535
+	  transfers and the block must fit in the 128 KiB SRAM buffer.
+
+config SDRAM_BENCH_CONCURRENT
+	bool "Concurrent bus-master suite"
+	select DMA
+	help
+	  CPU kernels measured alone and while the DMAC (dma0 channel 1) and,
+	  if enabled, the CM33 and the GLCDC access the SDRAM.
+
+config SDRAM_BENCH_CM33
+	bool "CM33 traffic generator in the concurrent suite"
+	depends on SDRAM_BENCH_CONCURRENT
+	help
+	  Starts the CM33 and drives the cm33_traffic image through the SDRAM
+	  mailbox. Enabled by the sysbuild build, which also builds and
+	  flashes the CM33 image.
+
+config SDRAM_BENCH_GLCDC
+	bool "GLCDC scan-out in the concurrent suite"
+	depends on SDRAM_BENCH_CONCURRENT && DISPLAY
+	help
+	  Scans two application frame buffers in SDRAM out through the GLCDC
+	  (requires the glcdc.overlay devicetree overlay and
+	  CONFIG_RENESAS_RA_GLCDC_FB_NUM=0).
+
+config SDRAM_BENCH_SUSTAINED_SEC
+	int "Sustained test duration in seconds (0 disables)"
+	default 0
+	range 0 86400
+
+config SDRAM_BENCH_SUSTAINED_FULL
+	bool "Sustained test covers all of SDRAM with random patterns"
+	help
+	  Rotate over 15 4 MiB windows (all of SDRAM except the mailbox
+	  window) and write a new pseudo-random pattern every cycle. Do not
+	  combine with the concurrent suite.
+
+config SDRAM_BENCH_SUSTAINED_REPORT_SEC
+	int "Sustained test report interval in seconds"
+	default 10
+	range 1 3600
+
+endmenu
+
+source "Kconfig.zephyr"

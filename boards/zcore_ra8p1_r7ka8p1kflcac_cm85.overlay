@@ -1,0 +1,14 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+/*
+ * The SDRAM controller and the sdram1 memory region are enabled by the
+ * board dtsi. This overlay only enables DMAC channels 0-3 for the DMA
+ * tests (channel 1 is also the background engine of the concurrent suite).
+ * The node is unused when CONFIG_DMA is disabled.
+ */
+
+&dma0 {
+	status = "okay";
+	interrupts = <88 1>, <89 1>, <90 1>, <91 1>;
+	interrupt-names = "ch0", "ch1", "ch2", "ch3";
+};
